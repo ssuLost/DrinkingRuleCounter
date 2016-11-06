@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="314.0" prefWidth="490.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.lost.movie.night.visualizer.FXMLController">
+    <children>
+        <Button fx:id="startListening" layoutX="338.0" layoutY="275.0" onAction="#handleStartListen" text="Start!" />
+        <MenuBar layoutY="2.0" prefHeight="25.0" prefWidth="490.0">
+            <menus>
+                <Menu mnemonicParsing="false" text="File">
+                    <items>
+                        <MenuItem fx:id="addRule" mnemonicParsing="false" onAction="#handleAddRule" text="Add Rule" />
+                  <MenuItem fx:id="saveRules" mnemonicParsing="false" onAction="#handleSaveRules" text="Save Rules" />
+                  <MenuItem fx:id="loadRules" mnemonicParsing="false" onAction="#handleLoadRules" text="Load Rules" />
+                        <MenuItem fx:id="close" mnemonicParsing="false" onAction="#handleClose" text="Close" />
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+        <Button fx:id="StopListening" disable="true" layoutX="410.0" layoutY="275.0" onAction="#handleStopListen" text="Stop!" />
+      <Pane layoutX="12.0" layoutY="74.0" prefHeight="166.0" prefWidth="467.0">
+         <children>
+            <ListView fx:id="ruleListView" layoutX="13.0" prefHeight="166.0" prefWidth="442.0">
+               <contextMenu>
+                  <ContextMenu>
+                    <items>
+                      <MenuItem fx:id="deleteRuleContext" mnemonicParsing="false" onAction="#handleContextDeleteRule" text="Delete Rule" />
+                    </items>
+                  </ContextMenu>
+               </contextMenu></ListView>
+         </children>
+      </Pane>
+      <Button fx:id="addRuleButton" layoutX="442.0" layoutY="239.0" onAction="#handleAddRule" text="+" />
+      <TextField fx:id="moveNameField" layoutX="26.0" layoutY="49.0" />
+      <Label layoutX="26.0" layoutY="32.0" text="Movie Title" />
+    </children>
+</AnchorPane>
