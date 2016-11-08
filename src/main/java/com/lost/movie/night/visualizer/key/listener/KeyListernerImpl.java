@@ -6,11 +6,12 @@
 package com.lost.movie.night.visualizer.key.listener;
 
 import com.lost.movie.night.rules.Rule;
-import com.lost.movie.night.rules.Rules;
-import java.util.Iterator;
 import javafx.collections.ObservableList;
-import javafx.scene.control.ListView;
+import javafx.event.EventHandler;
+import javafx.scene.input.KeyEvent;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 
@@ -18,9 +19,11 @@ import org.jnativehook.keyboard.NativeKeyListener;
  *
  * @author James
  */
-public class KeyListernerImpl implements NativeKeyListener {
+public class KeyListernerImpl implements NativeKeyListener, EventHandler<KeyEvent> {
 
     private final ObservableList<Rule> theRules;
+
+    final Logger logger = LogManager.getLogger(KeyListernerImpl.class);
 
     public KeyListernerImpl(ObservableList<Rule> rules) {
         theRules = rules;
@@ -36,10 +39,20 @@ public class KeyListernerImpl implements NativeKeyListener {
 
     @Override
     public void nativeKeyTyped(NativeKeyEvent nke) {
-        
         for (Rule rule : theRules) {
-            if(StringUtils.equals(rule.getbind(), ""+nke.getKeyChar())){
-                System.out.println("Triggered: "+rule.toString());
+            if (StringUtils.equals(rule.getbind(), "" + nke.getKeyChar())) {
+                System.out.println("Triggered: " + rule.toString());
+                rule.addCnt();
+            }
+        }
+    }
+
+    @Override
+    public void handle(KeyEvent event) {      
+        logger.debug("Key typed: " + event.getCharacter());
+        for (Rule rule : theRules) {
+            if (StringUtils.equals(rule.getbind(), event.getCharacter())) {
+                System.out.println("Triggered: " + rule.toString());
                 rule.addCnt();
             }
         }

@@ -25,6 +25,7 @@ import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -45,10 +46,11 @@ public class FXMLController implements Initializable {
     final Logger logger = LogManager.getLogger(FXMLController.class);
 
     private ObservableList<Rule> ruleList;
+    private Boolean useNativeFlag = false;
     private KeyListernerImpl keyListener;
+
     @FXML
     private ListView<Rule> ruleListView;
-
     @FXML
     private Button startListening;
     @FXML
@@ -67,49 +69,44 @@ public class FXMLController implements Initializable {
     private MenuItem deleteRuleContext;
     @FXML
     private TextField moveNameField;
+    @FXML
+    private MenuItem useNative;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         //Creates the rules list on startup.
         ruleList = FXCollections.observableArrayList();
         ruleListView.setItems(ruleList);
-        
+
     }
 
     @FXML
     private void handleStartListen(ActionEvent event) {
-        try {
-            GlobalScreen.registerNativeHook();
-            System.out.println("Successfully regged hook");
-        } catch (NativeHookException ex) {
-            System.err.println("There was a problem registering the native hook.");
-            System.err.println(ex.getMessage());
-            System.exit(1);
-        }
         keyListener = new KeyListernerImpl(ruleList);
-        GlobalScreen.addNativeKeyListener(keyListener);
-
+        if (useNativeFlag) {
+            this.startNativeListener();
+        } else {
+            this.StopListening.getScene().setOnKeyTyped(keyListener);
+        }
         startListening.setDisable(true);
         StopListening.setDisable(false);
     }
 
     @FXML
     private void handleStopListen(ActionEvent event) {
-
-        try {
-            GlobalScreen.removeNativeKeyListener(keyListener);
-            GlobalScreen.unregisterNativeHook();
-        } catch (NativeHookException ex) {
-            System.err.println("There was a problem unregistering the native hook.");
-            System.err.println(ex.getMessage());
-            System.exit(1);
+        if (useNativeFlag) {
+            this.stopNativeListener();
+        } else {
+            this.StopListening.getScene().setOnKeyTyped(null);
         }
+
         startListening.setDisable(false);
         StopListening.setDisable(true);
     }
 
     @FXML
-    private void handleAddRule(ActionEvent event) {
+    private void handleAddRule(ActionEvent event
+    ) {
         TextInputDialog dialog = new TextInputDialog("AddRule");
         dialog.setTitle("Add a new rule");
         dialog.setHeaderText("Enter new rule");
@@ -120,14 +117,18 @@ public class FXMLController implements Initializable {
     }
 
     @FXML
-    private void handleSaveRules(ActionEvent event) {
+    private void handleSaveRules(ActionEvent event
+    ) {
 
         try {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Save Rules");
-            fileChooser.setInitialFileName(moveNameField.getText()+".ser");
+            fileChooser.setInitialFileName(moveNameField.getText() + ".ser");
             fileChooser.setInitialDirectory(new File(System.getProperty("user.dir")));
             File file = fileChooser.showSaveDialog(this.ruleListView.getScene().getWindow());
+            if (file == null) {
+                return;
+            }
             OutputStream fileStream = new FileOutputStream(file);
             OutputStream buffer = new BufferedOutputStream(fileStream);
             ObjectOutput output = new ObjectOutputStream(buffer);
@@ -135,26 +136,30 @@ public class FXMLController implements Initializable {
             output.writeObject(ruleList.toArray());
             output.close();
         } catch (IOException ex) {
-            System.out.println(ExceptionUtils.getStackTrace(ex));
+            logger.error(ExceptionUtils.getStackTrace(ex));
         }
     }
 
     @FXML
-    private void handleClose(ActionEvent event) {
+    private void handleClose(ActionEvent event
+    ) {
         this.handleSaveRules(event);
         this.handleStopListen(event);
         System.exit(0);
     }
 
     @FXML
-    private void handleLoadRules(ActionEvent event) {
+    private void handleLoadRules(ActionEvent event
+    ) {
         //deserialize the quarks.ser file
         try {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Load Rules");
             fileChooser.setInitialDirectory(new File(System.getProperty("user.dir")));
             File file = fileChooser.showOpenDialog(this.ruleListView.getScene().getWindow());
-
+            if (file == null) {
+                return;
+            }
             InputStream fileStrem = new FileInputStream(file);
             InputStream buffer = new BufferedInputStream(fileStrem);
             ObjectInput input = new ObjectInputStream(buffer);
@@ -169,25 +174,56 @@ public class FXMLController implements Initializable {
             }
             ruleListView.setItems(ruleList);
             this.refresh();
-        } catch (ClassNotFoundException ex) {
-            System.out.println(ExceptionUtils.getStackTrace(ex));
-        } catch (IOException ex) {
-            System.out.println(ExceptionUtils.getStackTrace(ex));
+        } catch (ClassNotFoundException | IOException ex) {
+            logger.error(ExceptionUtils.getStackTrace(ex));
         }
-    }
-
-    public void refresh() {
-        ruleListView.refresh();
-    }
-
-    private void handleDeleteContext(ActionEvent event) {
-        ListCell<String> cell = new ListCell<>();
-        event.getEventType().getName();
-        //event -> ruleListView.getItems().remove(cell.getItem());
     }
 
     @FXML
     private void handleContextDeleteRule(ActionEvent event) {
         ruleListView.getItems().remove(ruleListView.getSelectionModel().getSelectedItem());
+    }
+
+    @FXML
+    private void handleUseNative(ActionEvent event) {
+        if (useNativeFlag) {
+            useNativeFlag = false;
+            if (this.startListening.isDisable()) {
+                this.StopListening.getScene().setOnKeyTyped(keyListener);
+                this.stopNativeListener();
+            }
+        } else {
+            useNativeFlag = true;
+            if (this.startListening.isDisable()) {
+                this.StopListening.getScene().setOnKeyTyped(null);
+                this.startNativeListener();
+            }
+        }
+    }
+
+    private void startNativeListener() {
+        try {
+            GlobalScreen.registerNativeHook();
+            GlobalScreen.addNativeKeyListener(keyListener);
+            logger.debug("Successfully regged hook");
+        } catch (NativeHookException ex) {
+            logger.error("There was a problem registering the native hook.");
+            logger.error(ExceptionUtils.getStackTrace(ex));
+        }
+    }
+
+    private void stopNativeListener() {
+        try {
+            GlobalScreen.removeNativeKeyListener(keyListener);
+            GlobalScreen.unregisterNativeHook();
+        } catch (NativeHookException ex) {
+            System.err.println("There was a problem unregistering the native hook.");
+            System.err.println(ex.getMessage());
+            System.exit(1);
+        }
+    }
+
+    public void refresh() {
+        ruleListView.refresh();
     }
 }

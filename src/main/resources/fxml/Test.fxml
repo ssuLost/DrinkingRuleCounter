@@ -20,6 +20,11 @@
                         <MenuItem fx:id="close" mnemonicParsing="false" onAction="#handleClose" text="Close" />
                     </items>
                 </Menu>
+            <Menu mnemonicParsing="false" text="Config">
+              <items>
+                  <RadioMenuItem fx:id="useNative" mnemonicParsing="false" onAction="#handleUseNative" text="Use Navtive Listener" />
+              </items>
+            </Menu>
             </menus>
         </MenuBar>
         <Button fx:id="StopListening" disable="true" layoutX="410.0" layoutY="275.0" onAction="#handleStopListen" text="Stop!" />
