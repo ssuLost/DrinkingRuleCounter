@@ -15,21 +15,14 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
@@ -113,7 +106,7 @@ public class FXMLController implements Initializable {
         dialog.setContentText("Please enter the name of the rule:");
 
         Optional<String> result = dialog.showAndWait();
-        result.ifPresent(letter -> ruleList.add(new Rule(letter, Integer.toString(ruleList.size()), this)));
+        result.ifPresent(letter -> ruleList.add(new Rule(letter, Integer.toString(ruleList.size()+1), this)));
     }
 
     @FXML
